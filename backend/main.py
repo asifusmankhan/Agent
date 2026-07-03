@@ -204,7 +204,7 @@ async def chat(req: ChatRequest):
 
     for _ in range(6):   # max 6 agentic turns
         resp = claude.messages.create(
-            model="claude-sonnet-4-6",
+            model="claude-sonnet-5",
             max_tokens=1000,
             system=SYSTEM_PROMPT,
             messages=messages,
