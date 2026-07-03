@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asif Tech — AI Agent</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #111118;
+      --surface2:  #16161f;
+      --border:    rgba(255,255,255,0.08);
+      --accent:    #00d4ff;
+      --accent-bg: rgba(0,212,255,0.08);
+      --pro:       #a78bfa;
+      --pro-bg:    rgba(124,58,237,0.15);
+      --success:   #10b981;
+      --danger:    #ef4444;
+      --text:      #e2e8f0;
+      --muted:     #475569;
+      --font:      system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      display: flex; align-items: center; justify-content: center;
+      color: #000; font-size: 18px; flex-shrink: 0;
+    }
+    .agent-name  { font-size: 15px; font-weight: 500; }
+    .agent-status {
+      font-size: 12px; color: var(--success);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .dot { width:6px; height:6px; border-radius:50%; background:var(--success); display:inline-block; }
+    .caps { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .cap-badge {
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 12px;
+      background: var(--accent-bg);
+      color: var(--accent);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .clear-btn {
+      display: flex; align-items: center; gap: 4px;
+      padding: 5px 10px; border-radius: 8px;
+      border: 0.5px solid var(--border);
+      background: transparent; color: var(--muted);
+      font-size: 12px; cursor: pointer; font-family: var(--font);
+    }
+    .clear-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+    /* ── Messages ── */
+    #messages {
+      flex: 1; overflow-y: auto;
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+
+    /* Welcome */
+    #welcome {
+      text-align: center;
+      padding-top: 40px;
+    }
+    .welcome-icon {
+      width: 56px; height: 56px; border-radius: 12px;
+      background: var(--accent-bg);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      color: var(--accent); font-size: 28px;
+    }
+    #welcome h2 { font-size: 20px; font-weight: 500; margin-bottom: 8px; }
+    #welcome p  { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+    .quick-grid {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      justify-content: center; max-width: 600px; margin: 0 auto;
+    }
+    .quick-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px; border-radius: 10px;
+      border: 0.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text); font-size: 14px; cursor: pointer;
+      font-family: var(--font); transition: border-color 0.15s, color 0.15s;
+    }
+    .quick-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .quick-btn i { color: var(--accent); }
+
+    /* Message rows */
+    .msg-row {
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-row.bot  { justify-content: flex-start; }
+
+    .bot-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: var(--accent-bg);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 14px; flex-shrink: 0; margin-top: 2px;
+    }
+
+    .msg-wrap {
+      max-width: 76%;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .msg-row.user .msg-wrap { align-items: flex-end; }
+    .msg-row.bot  .msg-wrap { align-items: flex-start; }
+
+    .tool-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+    .tool-badge {
+      display: flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 20px; font-size: 11px;
+      background: var(--pro-bg); color: var(--pro);
+      border: 0.5px solid rgba(124,58,237,0.3);
+    }
+
+    .bubble {
+      padding: 10px 14px;
+      font-size: 14px; line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .msg-row.user .bubble {
+      border-radius: 12px 12px 4px 12px;
+      background: var(--accent);
+      color: #000;
+    }
+    .msg-row.bot .bubble {
+      border-radius: 4px 12px 12px 12px;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      color: var(--text);
+    }
+    .msg-row.bot.error .bubble {
+      background: rgba(239,68,68,0.12);
+      border-color: rgba(239,68,68,0.3);
+      color: #fca5a5;
+    }
+
+    /* Typing indicator */
+    #typing {
+      display: none;
+      align-items: flex-start; gap: 8px;
+    }
+    #typing.visible { display: flex; }
+    .dots { display: flex; gap: 4px; align-items: center; }
+    .dots span {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%,80%,100% { transform: translateY(0); }
+      40%          { transform: translateY(-5px); }
+    }
+    #typing-text { font-size: 13px; color: var(--muted); }
+
+    /* ── Input ── */
+    footer {
+      padding: 12px 20px 16px;
+      border-top: 0.5px solid var(--border);
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    .input-wrap {
+      max-width: 720px; margin: 0 auto;
+      display: flex; align-items: flex-end; gap: 8px;
+      background: var(--surface);
+      border: 0.5px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 8px 8px 8px 14px;
+    }
+    textarea {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text); font-size: 14px; line-height: 1.5;
+      resize: none; font-family: var(--font);
+      max-height: 100px; overflow-y: auto;
+    }
+    textarea::placeholder { color: var(--muted); }
+    #send-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: none; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; transition: background 0.15s, color 0.15s;
+      background: var(--surface2); color: var(--muted);
+    }
+    #send-btn.active {
+      background: var(--accent); color: #000;
+    }
+    .footer-note {
+      text-align: center; font-size: 11px;
+      color: #1e293b; margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="avatar"><i class="ti ti-robot"></i></div>
+  <div>
+    <div class="agent-name">Asif Tech AI Agent</div>
+    <div class="agent-status"><span class="dot"></span> Shopify connected</div>
+  </div>
+  <div class="caps">
+    <span class="cap-badge"><i class="ti ti-package"></i> Products</span>
+    <span class="cap-badge"><i class="ti ti-shopping-cart"></i> Orders</span>
+    <span class="cap-badge"><i class="ti ti-users"></i> Customers</span>
+    <span class="cap-badge"><i class="ti ti-chart-bar"></i> Analytics</span>
+    <button class="clear-btn" id="clear-btn" style="display:none" onclick="clearChat()">
+      <i class="ti ti-trash"></i> Clear
+    </button>
+  </div>
+</header>
+
+<!-- Messages -->
+<div id="messages">
+  <div id="welcome">
+    <div class="welcome-icon"><i class="ti ti-robot"></i></div>
+    <h2>What would you like to do?</h2>
+    <p>Connected to your Asif Tech Shopify store. Ask anything or pick a quick action.</p>
+    <div class="quick-grid">
+      <button class="quick-btn" onclick="sendMsg('Show me my latest products')">
+        <i class="ti ti-package"></i> Latest products
+      </button>
+      <button class="quick-btn" onclick="sendMsg('What are my most recent orders?')">
+        <i class="ti ti-shopping-cart"></i> Recent orders
+      </button>
+      <button class="quick-btn" onclick="sendMsg('Show sales analytics for the last 30 days')">
+        <i class="ti ti-chart-bar"></i> Sales analytics
+      </button>
+      <button class="quick-btn" onclick="sendMsg('Who are my top customers by total spent?')">
+        <i class="ti ti-users"></i> Top customers
+      </button>
+    </div>
+  </div>
+
+  <!-- Typing indicator -->
+  <div id="typing">
+    <div class="bot-icon"><i class="ti ti-robot"></i></div>
+    <div class="bubble" style="border-radius:4px 12px 12px 12px; background:var(--surface); border:0.5px solid var(--border); display:flex; align-items:center; gap:10px">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span id="typing-text">Connecting to Shopify...</span>
+    </div>
+  </div>
+</div>
+
+<!-- Input -->
+<footer>
+  <div class="input-wrap">
+    <textarea id="input" rows="1" placeholder="Ask about your Shopify store..."
+      oninput="onInput(this)" onkeydown="onKey(event)"></textarea>
+    <button id="send-btn" onclick="sendMsg()"><i class="ti ti-send"></i></button>
+  </div>
+  <p class="footer-note">Powered by Claude · FastAPI · Shopify Admin API</p>
+</footer>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────────
+  // In production, Netlify rewrites /api/* → your Render backend.
+  // In local dev, set this to http://localhost:8000
+  const API_BASE = "";
+
+  // ── State ───────────────────────────────────────────────────────────────────
+  let history = [];
+  let busy = false;
+  const BUSY_MSGS = ["Connecting to Shopify...", "Fetching store data...", "Processing results...", "Almost ready..."];
+  let busyIdx = 0, busyTimer = null;
+
+  // ── DOM helpers ─────────────────────────────────────────────────────────────
+  const $  = id => document.getElementById(id);
+  const msgs = $("messages");
+
+  function addMessage(role, content, toolsUsed = []) {
+    $("welcome").style.display = "none";
+    $("clear-btn").style.display = "flex";
+
+    const row = document.createElement("div");
+    row.className = `msg-row ${role === "user" ? "user" : "bot"}`;
+
+    if (role === "bot") {
+      const icon = document.createElement("div");
+      icon.className = "bot-icon";
+      icon.innerHTML = '<i class="ti ti-robot"></i>';
+      row.appendChild(icon);
+    }
+
+    const wrap = document.createElement("div");
+    wrap.className = "msg-wrap";
+
+    if (toolsUsed.length) {
+      const badges = document.createElement("div");
+      badges.className = "tool-badges";
+      toolsUsed.forEach(t => {
+        const b = document.createElement("span");
+        b.className = "tool-badge";
+        b.innerHTML = `<i class="ti ti-tool"></i> ${toLabel(t)}`;
+        badges.appendChild(b);
+      });
+      wrap.appendChild(badges);
+    }
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = content;
+    wrap.appendChild(bubble);
+    row.appendChild(wrap);
+
+    // Insert before typing indicator
+    msgs.insertBefore(row, $("typing"));
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function setTyping(visible, text = "Connecting to Shopify...") {
+    const el = $("typing");
+    el.className = visible ? "visible" : "";
+    $("typing-text").textContent = text;
+    if (visible) msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function toLabel(name) {
+    return name.replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  // ── Input handling ───────────────────────────────────────────────────────────
+  function onInput(ta) {
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 100) + "px";
+    const btn = $("send-btn");
+    btn.className = ta.value.trim() && !busy ? "active" : "";
+  }
+
+  function onKey(e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+  }
+
+  // ── Send ─────────────────────────────────────────────────────────────────────
+  async function sendMsg(preset) {
+    const ta = $("input");
+    const text = (preset || ta.value).trim();
+    if (!text || busy) return;
+
+    ta.value = ""; ta.style.height = "auto";
+    $("send-btn").className = "";
+
+    addMessage("user", text);
+    busy = true;
+
+    busyIdx = 0;
+    setTyping(true, BUSY_MSGS[0]);
+    busyTimer = setInterval(() => {
+      busyIdx = (busyIdx + 1) % BUSY_MSGS.length;
+      $("typing-text").textContent = BUSY_MSGS[busyIdx];
+    }, 2500);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      clearInterval(busyTimer);
+      setTyping(false);
+
+      history = data.history;
+      addMessage("bot", data.reply, data.tools_used || []);
+
+    } catch (err) {
+      clearInterval(busyTimer);
+      setTyping(false);
+      addMessage("bot", `Something went wrong: ${err.message}\n\nMake sure the backend is running and BACKEND_URL is set in netlify.toml.`);
+    } finally {
+      busy = false;
+      ta.focus();
+    }
+  }
+
+  function clearChat() {
+    history = [];
+    // Remove all message rows (keep welcome + typing)
+    [...msgs.children].forEach(c => {
+      if (c.id !== "welcome" && c.id !== "typing") c.remove();
+    });
+    $("welcome").style.display = "block";
+    $("clear-btn").style.display = "none";
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+[build]
+  publish = "frontend"
+
+# Proxy /api/* to your Render backend (no CORS needed)
+[[redirects]]
+  from   = "/api/*"
+  to     = "https://agent-4dx0.onrender.com/api/:splat"
+  status = 200
+  force  = true
